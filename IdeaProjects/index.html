@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilkFlow — Smart Dairy Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root {
+  --cream: #FFF8EE;
+  --milk-white: #FEFCF8;
+  --gold: #D4A017;
+  --gold-light: #F2C94C;
+  --brown: #6B3D2E;
+  --brown-dark: #3D1A0F;
+  --green: #2D6A4F;
+  --green-light: #52B788;
+  --blue: #1A4A7A;
+  --blue-light: #4A90D9;
+  --red: #C0392B;
+  --red-light: #E74C3C;
+  --gray: #8A8A8A;
+  --gray-light: #F0EDE8;
+  --shadow: 0 8px 32px rgba(61,26,15,0.12);
+  --shadow-lg: 0 20px 60px rgba(61,26,15,0.18);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--brown-dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ====== SPLASH / LANDING ====== */
+#splash {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown) 40%, #9B5E3A 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+#splash::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(212,160,23,0.15) 0%, transparent 70%);
+  top: -100px; right: -100px;
+  border-radius: 50%;
+  animation: pulse 4s ease-in-out infinite;
+}
+#splash::after {
+  content: '';
+  position: absolute;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(255,248,238,0.08) 0%, transparent 70%);
+  bottom: -50px; left: -50px;
+  border-radius: 50%;
+  animation: pulse 5s ease-in-out infinite reverse;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:0.7} }
+
+.splash-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 64px;
+  color: var(--cream);
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  z-index: 1;
+  animation: fadeDown 0.8s ease;
+}
+.splash-logo span { color: var(--gold-light); }
+.splash-tagline {
+  color: rgba(255,248,238,0.7);
+  font-size: 18px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin: 12px 0 60px;
+  z-index: 1;
+  animation: fadeDown 0.8s ease 0.2s both;
+}
+.splash-milk-drop {
+  font-size: 80px;
+  margin-bottom: 20px;
+  z-index: 1;
+  animation: bounce 2s ease infinite;
+}
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+
+.role-cards {
+  display: flex;
+  gap: 24px;
+  z-index: 1;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 20px;
+}
+.role-card {
+  background: rgba(255,248,238,0.1);
+  border: 1px solid rgba(212,160,23,0.3);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  backdrop-filter: blur(10px);
+  animation: fadeUp 0.8s ease both;
+}
+.role-card:nth-child(1){animation-delay:0.4s}
+.role-card:nth-child(2){animation-delay:0.5s}
+.role-card:nth-child(3){animation-delay:0.6s}
+@keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+.role-card:hover {
+  background: rgba(212,160,23,0.25);
+  border-color: var(--gold-light);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.role-icon { font-size: 48px; margin-bottom: 14px; }
+.role-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.role-subtitle { font-size: 13px; color: rgba(255,248,238,0.55); letter-spacing: 1px; text-transform: uppercase; }
+
+/* ====== MAIN APP ====== */
+#app { display: none; min-height: 100vh; }
+
+/* ====== SIDEBAR ====== */
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 270px;
+  background: var(--brown-dark);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(212,160,23,0.15);
+}
+.sidebar-logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  color: var(--cream);
+}
+.sidebar-logo-text span { color: var(--gold-light); }
+.sidebar-role-badge {
+  margin-top: 8px;
+  display: inline-block;
+  background: rgba(212,160,23,0.2);
+  color: var(--gold-light);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: 'Space Mono', monospace;
+}
+
+.sidebar-nav { flex: 1; padding: 20px 12px; overflow-y: auto; }
+.nav-section-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,248,238,0.3);
+  padding: 8px 12px 4px;
+  font-family: 'Space Mono', monospace;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 2px;
+  color: rgba(255,248,238,0.65);
+  font-size: 15px;
+}
+.nav-item i { width: 20px; text-align: center; font-size: 16px; }
+.nav-item:hover { background: rgba(212,160,23,0.15); color: var(--cream); }
+.nav-item.active { background: var(--gold); color: var(--brown-dark); font-weight: 600; }
+.nav-item.active i { color: var(--brown-dark); }
+
+.sidebar-footer {
+  padding: 16px 12px;
+  border-top: 1px solid rgba(212,160,23,0.15);
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+}
+.user-avatar {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--brown-dark);
+  font-size: 16px;
+}
+.user-name { font-size: 14px; color: var(--cream); font-weight: 500; }
+.user-role-text { font-size: 11px; color: var(--gray); }
+.logout-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(192,57,43,0.15);
+  border: 1px solid rgba(192,57,43,0.3);
+  border-radius: var(--radius-sm);
+  color: #E57373;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.logout-btn:hover { background: rgba(192,57,43,0.3); }
+
+/* ====== MAIN CONTENT ====== */
+.main {
+  flex: 1;
+  margin-left: 270px;
+  padding: 0;
+  background: var(--cream);
+  min-height: 100vh;
+}
+.topbar {
+  background: var(--milk-white);
+  border-bottom: 1px solid rgba(107,61,46,0.1);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 12px rgba(61,26,15,0.05);
+}
+.page-title { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--brown-dark); }
+.topbar-actions { display: flex; gap: 12px; align-items: center; }
+.notif-btn {
+  width: 40px; height: 40px;
+  background: var(--gray-light);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brown);
+  font-size: 18px;
+  position: relative;
+  transition: all 0.2s;
+}
+.notif-btn:hover { background: var(--gold); color: var(--brown-dark); }
+.notif-dot {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  background: var(--red-light);
+  border-radius: 50%;
+}
+
+.content { padding: 28px 32px; }
+
+/* ====== PANELS ====== */
+.panel { display: none; animation: fadeIn 0.4s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ====== STAT CARDS ====== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--milk-white);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(107,61,46,0.06);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.stat-card.gold::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+.stat-card.green::before { background: linear-gradient(90deg, var(--green), var(--green-light)); }
+.stat-card.blue::before { background: linear-gradient(90deg, var(--blue), var(--blue-light)); }
+.stat-card.red::before { background: linear-gradient(90deg, var(--red), var(--red-light)); }
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+.stat-icon.gold { background: rgba(212,160,23,0.12); color: var(--gold); }
+.stat-icon.green { background: rgba(45,106,79,0.12); color: var(--green); }
+.stat-icon.blue { background: rgba(26,74,122,0.12); color: var(--blue); }
+.stat-icon.red { background: rgba(192,57,43,0.12); color: var(--red); }
+.stat-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brown-dark);
+}
+.stat-label { font-size: 13px; color: var(--gray); margin-top: 4px; }
+.stat-change { font-size: 12px; margin-top: 8px; }
+.stat-change.up { color: var(--green-light); }
+.stat-change.down { color: var(--red-light); }
+
+/* ====== SECTION CARD ====== */
+.card {
+  background: var(--milk-white);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(107,61,46,0.06);
+  margin-bottom: 24px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--brown-dark);
+}
+.card-subtitle { font-size: 13px; color: var(--gray); margin-top: 2px; }
+
+/* ====== BUTTONS ====== */
+.btn {
+  padding: 11px 22px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary { background: var(--gold); color: var(--brown-dark); }
+.btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,160,23,0.3); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: var(--green-light); }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: var(--red-light); }
+.btn-outline { background: transparent; border: 1.5px solid rgba(107,61,46,0.25); color: var(--brown); }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
+.btn-blue { background: var(--blue); color: white; }
+.btn-blue:hover { background: var(--blue-light); }
+
+/* ====== TABLE ====== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray);
+  background: var(--gray-light);
+  font-family: 'Space Mono', monospace;
+}
+th:first-child { border-radius: 8px 0 0 8px; }
+th:last-child { border-radius: 0 8px 8px 0; }
+td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid rgba(107,61,46,0.06); }
+tr:hover td { background: rgba(212,160,23,0.04); }
+tr:last-child td { border-bottom: none; }
+
+/* ====== BADGE ====== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-success { background: rgba(45,106,79,0.12); color: var(--green); }
+.badge-warning { background: rgba(212,160,23,0.12); color: var(--gold); }
+.badge-danger { background: rgba(192,57,43,0.12); color: var(--red); }
+.badge-info { background: rgba(26,74,122,0.12); color: var(--blue); }
+.badge-gray { background: var(--gray-light); color: var(--gray); }
+
+/* ====== FORM ====== */
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--brown); margin-bottom: 6px; }
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(107,61,46,0.18);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--brown-dark);
+  background: var(--milk-white);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,160,23,0.12); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B3D2E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+
+/* ====== MODAL ====== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(61,26,15,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--milk-white);
+  border-radius: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 22px; }
+.modal-close { width: 32px; height: 32px; border: none; background: var(--gray-light); border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--red-light); color: white; }
+
+/* ====== MAP ====== */
+.map-container {
+  background: linear-gradient(135deg, #E8F5E9 0%, #E3F2FD 100%);
+  border-radius: var(--radius);
+  height: 380px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(107,61,46,0.08);
+}
+.map-bg {
+  position: absolute; inset: 0;
+  background: 
+    linear-gradient(rgba(107,61,46,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(107,61,46,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.map-road {
+  position: absolute;
+  background: rgba(107,61,46,0.12);
+  border-radius: 4px;
+}
+.road-h { height: 10px; left: 0; right: 0; }
+.road-v { width: 10px; top: 0; bottom: 0; }
+.map-location {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.map-location:hover { transform: scale(1.1); }
+.map-pin {
+  width: 36px; height: 36px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.map-pin i { transform: rotate(45deg); font-size: 14px; }
+.pin-farm { background: var(--green); color: white; }
+.pin-delivery { background: var(--blue); color: white; }
+.pin-customer { background: var(--gold); color: var(--brown-dark); }
+.map-label {
+  background: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  margin-top: 4px;
+  white-space: nowrap;
+  color: var(--brown-dark);
+}
+.delivery-route {
+  position: absolute;
+  border-top: 3px dashed var(--blue-light);
+  transform-origin: left;
+  pointer-events: none;
+}
+.delivery-boy {
+  position: absolute;
+  width: 44px; height: 44px;
+  background: var(--blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 16px rgba(26,74,122,0.4);
+  border: 3px solid white;
+  animation: moveDelivery 8s ease-in-out infinite;
+  z-index: 10;
+}
+@keyframes moveDelivery {
+  0%   { left: 18%; top: 45%; }
+  25%  { left: 35%; top: 32%; }
+  50%  { left: 55%; top: 40%; }
+  75%  { left: 68%; top: 55%; }
+  100% { left: 18%; top: 45%; }
+}
+.map-legend {
+  position: absolute;
+  bottom: 14px; right: 14px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 11px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ====== PROGRESS BAR ====== */
+.progress-bar { background: var(--gray-light); border-radius: 10px; height: 8px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; border-radius: 10px; transition: width 0.6s ease; }
+
+/* ====== QUICK ACTIONS ====== */
+.quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.quick-action {
+  background: var(--milk-white);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  border: 1.5px solid rgba(107,61,46,0.08);
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+}
+.quick-action:hover { border-color: var(--gold); transform: translateY(-3px); }
+.quick-action-icon { font-size: 30px; margin-bottom: 8px; }
+.quick-action-label { font-size: 13px; font-weight: 600; color: var(--brown); }
+
+/* ====== CHART BAR ====== */
+.chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding-top: 10px; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chart-bar-inner { 
+  width: 100%; 
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(to top, var(--gold), var(--gold-light));
+  min-height: 4px;
+  transition: height 0.6s ease;
+  cursor: pointer;
+}
+.chart-bar-inner:hover { background: linear-gradient(to top, var(--brown), var(--gold)); }
+.chart-bar-label { font-size: 10px; color: var(--gray); font-family: 'Space Mono', monospace; }
+.chart-val { font-size: 10px; font-weight: 700; color: var(--brown-dark); }
+
+/* ====== TOGGLE ====== */
+.toggle-group { display: flex; background: var(--gray-light); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px; }
+.toggle-btn { flex: 1; padding: 8px; text-align: center; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; color: var(--gray); }
+.toggle-btn.active { background: white; color: var(--brown-dark); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+/* ====== AUTH SCREEN ====== */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--cream) 0%, #F5ECD8 100%);
+}
+.auth-card {
+  background: var(--milk-white);
+  border-radius: 24px;
+  padding: 48px;
+  width: 440px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(107,61,46,0.1);
+}
+.auth-logo { text-align: center; margin-bottom: 32px; }
+.auth-logo .logo-text { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--brown-dark); }
+.auth-logo .logo-text span { color: var(--gold); }
+.auth-logo .logo-emoji { font-size: 50px; display: block; margin-bottom: 8px; }
+.auth-title { font-family: 'Playfair Display', serif; font-size: 26px; margin-bottom: 6px; }
+.auth-subtitle { font-size: 14px; color: var(--gray); margin-bottom: 28px; }
+.auth-tabs { display: flex; gap: 0; border: 1.5px solid rgba(107,61,46,0.15); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+.auth-tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; color: var(--gray); background: transparent; }
+.auth-tab.active { background: var(--gold); color: var(--brown-dark); font-weight: 700; }
+
+/* ====== NOTIFICATION TOAST ====== */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--brown-dark);
+  color: var(--cream);
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s both;
+}
+.toast.success { border-left: 4px solid var(--green-light); }
+.toast.error { border-left: 4px solid var(--red-light); }
+.toast.info { border-left: 4px solid var(--blue-light); }
+@keyframes slideInRight { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes fadeOut { to{opacity:0;transform:translateX(100%)} }
+
+/* ====== PAYMENT STATUS ====== */
+.payment-card {
+  background: linear-gradient(135deg, var(--brown-dark) 0%, var(--brown) 100%);
+  border-radius: var(--radius);
+  padding: 28px;
+  color: var(--cream);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.payment-card::before {
+  content: '🥛';
+  position: absolute;
+  font-size: 120px;
+  right: -20px; bottom: -20px;
+  opacity: 0.08;
+}
+.payment-amount { font-family: 'Space Mono', monospace; font-size: 42px; font-weight: 700; color: var(--gold-light); }
+.payment-label { font-size: 13px; color: rgba(255,248,238,0.6); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.payment-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(82,183,136,0.2); border: 1px solid rgba(82,183,136,0.4); border-radius: 20px; color: var(--green-light); font-size: 13px; margin-top: 12px; }
+
+/* ====== MOBILE HAMBURGER ====== */
+.hamburger {
+  display: none;
+  background: none; border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--brown-dark);
+  padding: 8px;
+}
+.sidebar-close { display: none; background: none; border: none; color: var(--cream); font-size: 20px; cursor: pointer; }
+
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(107,61,46,0.2); border-radius: 3px; }
+
+/* ====== ORDER TRACKING ====== */
+.track-steps { display: flex; align-items: center; margin-bottom: 28px; }
+.track-step { flex: 1; text-align: center; position: relative; }
+.track-step::after {
+  content: '';
+  position: absolute;
+  top: 20px; left: 50%; right: -50%;
+  height: 2px;
+  background: var(--gray-light);
+}
+.track-step.done::after { background: var(--green-light); }
+.track-step:last-child::after { display: none; }
+.track-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--gray-light);
+  margin: 0 auto 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  position: relative;
+  z-index: 1;
+}
+.track-step.done .track-circle { background: var(--green); color: white; }
+.track-step.active .track-circle { background: var(--gold); color: var(--brown-dark); animation: pulse 1.5s ease infinite; }
+.track-label { font-size: 11px; color: var(--gray); font-weight: 600; }
+.track-step.done .track-label { color: var(--green); }
+.track-step.active .track-label { color: var(--gold); }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .hamburger { display: flex; }
+  .sidebar-close { display: block; }
+  .content { padding: 20px 16px; }
+  .topbar { padding: 14px 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .auth-card { padding: 32px 24px; width: 96%; }
+  .role-cards { flex-direction: column; align-items: center; }
+  .splash-logo { font-size: 42px; }
+}
+
+/* ====== SKELETON LOADER ====== */
+.skeleton { background: linear-gradient(90deg, var(--gray-light) 25%, #F5EFE8 50%, var(--gray-light) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+</style>
+</head>
+<body>
+
+<!-- ====== SPLASH SCREEN ====== -->
+<div id="splash">
+  <div class="splash-milk-drop">🥛</div>
+  <div class="splash-logo">Milk<span>Flow</span></div>
+  <div class="splash-tagline">Smart Dairy Management Platform</div>
+  <div class="role-cards">
+    <div class="role-card" onclick="enterRole('farmer')">
+      <div class="role-icon">👨‍🌾</div>
+      <div class="role-title">Farmer</div>
+      <div class="role-subtitle">Submit & Track</div>
+    </div>
+    <div class="role-card" onclick="enterRole('admin')">
+      <div class="role-icon">🧑‍💼</div>
+      <div class="role-title">Admin</div>
+      <div class="role-subtitle">Manage & Control</div>
+    </div>
+    <div class="role-card" onclick="enterRole('customer')">
+      <div class="role-icon">🛒</div>
+      <div class="role-title">Customer</div>
+      <div class="role-subtitle">Order & Track</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== AUTH SCREEN ====== -->
+<div id="authScreen" style="display:none">
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-emoji" id="authEmoji">👨‍🌾</span>
+        <div class="logo-text">Milk<span>Flow</span></div>
+      </div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuth('login')">Login</div>
+        <div class="auth-tab" onclick="switchAuth('register')">Register</div>
+      </div>
+      <div id="loginForm">
+        <div class="form-group">
+          <label class="form-label">📧 Email Address</label>
+          <input type="email" class="form-control" placeholder="you@example.com" id="loginEmail">
+        </div>
+        <div class="form-group">
+          <label class="form-label">🔒 Password</label>
+          <input type="password" class="form-control" placeholder="Enter password" id="loginPass">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" onclick="doLogin()">
+          <i class="fas fa-sign-in-alt"></i> Login to MilkFlow
+        </button>
+        <div style="text-align:center;margin-top:16px">
+          <a href="#" style="color:var(--gold);font-size:13px;text-decoration:none" onclick="showToast('Password reset link sent!','info')">Forgot password?</a>
+        </div>
+      </div>
+      <div id="registerForm" style="display:none">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First Name</label><input class="form-control" placeholder="Ravi"></div>
+          <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" placeholder="Patel"></div>
+        </div>
+        <div class="form-group"><label class="form-label">📧 Email</label><input type="email" class="form-control" placeholder="you@example.com"></div>
+        <div class="form-group"><label class="form-label">📱 Mobile</label><input class="form-control" placeholder="+91 98765 43210"></div>
+        <div class="form-group"><label class="form-label">🔒 Password</label><input type="password" class="form-control" placeholder="Min 8 characters"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;" onclick="doRegister()">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+      </div>
+      <div style="text-align:center;margin-top:20px">
+        <button onclick="showSplash()" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:13px">← Back to Role Selection</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MAIN APP ====== -->
+<div id="app">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="sidebar-logo-text">Milk<span>Flow</span></div>
+            <span class="sidebar-role-badge" id="roleBadge">Farmer</span>
+          </div>
+          <button class="sidebar-close" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- Populated by JS -->
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="avatarText">R</div>
+          <div>
+            <div class="user-name" id="userName">Ravi Patel</div>
+            <div class="user-role-text" id="userRoleText">Farmer</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+        </div>
+        <div class="topbar-actions">
+          <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gray)" id="dateDisplay"></div>
+          <button class="notif-btn" onclick="showToast('3 new notifications','info')">
+            <i class="fas fa-bell"></i>
+            <span class="notif-dot"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- ============= FARMER PANELS ============= -->
+
+        <!-- Farmer Dashboard -->
+        <div class="panel active" id="panel-farmer-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card gold">
+              <div class="stat-icon gold"><i class="fas fa-tint"></i></div>
+              <div class="stat-value">142 L</div>
+              <div class="stat-label">Today's Collection</div>
+              <div class="stat-change up">↑ +12L from yesterday</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon green"><i class="fas fa-rupee-sign"></i></div>
+              <div class="stat-value">₹4,260</div>
+              <div class="stat-label">This Month Earnings</div>
+              <div class="stat-change up">↑ +8% this month</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+              <div class="stat-value">28</div>
+              <div class="stat-label">Days Active</div>
+              <div class="stat-change up">↑ Consistent supply</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-icon red"><i class="fas fa-clock"></i></div>
+              <div class="stat-value">₹720</div>
+              <div class="stat-label">Pending Payment</div>
+              <div class="stat-change down">↓ 3 days overdue</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📊 Monthly Milk Collection</div>
+                <div class="card-subtitle">Liters collected per day this week</div>
+              </div>
+              <button class="btn btn-outline btn-sm">View Full Report</button>
+            </div>
+            <div class="chart-bars" id="farmerChart"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:8px;padding:0 4px">
+              <span style="font-size:11px;color:var(--gray)">Mon</span><span style="font-size:11px;color:var(--gray)">Tue</span>
+              <span style="font-size:11px;color:var(--gray)">Wed</span><span style="font-size:11px;color:var(--gray)">Thu</span>
+              <span style="font-size:11px;color:var(--gray)">Fri</span><span style="font-size:11px;color:var(--gray)">Sat</span>
+              <span style="font-size:11px;color:var(--gray)">Sun</span>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="card">
+              <div class="card-title" style="margin-bottom:16px">🥛 Current Milk Price</div>
+              <div style="font-family:'Space Mono',monospace;font-size:36px;color:var(--gold);font-weight:700">₹30/L</div>
+              <div style="font-size:13px;color:var(--gray);margin-top:6px">Set by Admin • Updated today</div>
+              <div style="margin-top:16px;padding:12px;background:rgba(212,160,23,0.08);border-radius:10px;font-size:13px">
+                <b>Fat:</b> 3.5% | <b>SNF:</b> 8.5% | <b>Grade:</b> A+
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:16px">📋 Approval Status</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:14px">Account</span>
+                  <span class="badge badge-success"><i class="fas fa-check"></i> Approved</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:14px">KYC</span>
+                  <span class="badge badge-success"><i class="fas fa-check"></i> Verified</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:14px">Bank Account</span>
+                  <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Milk -->
+        <div class="panel" id="panel-farmer-addmilk">
+          <div class="card" style="max-width:560px">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🥛 Add Milk Collection</div>
+                <div class="card-subtitle">Record your daily milk submission</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📅 Collection Date</label>
+              <input type="date" class="form-control" id="milkDate">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">🕐 Session</label>
+                <select class="form-control" id="milkSession">
+                  <option>Morning (AM)</option>
+                  <option>Evening (PM)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">🧪 Milk Type</label>
+                <select class="form-control" id="milkType">
+                  <option>Cow Milk</option>
+                  <option>Buffalo Milk</option>
+                  <option>Mixed</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">💧 Quantity (Liters)</label>
+              <input type="number" class="form-control" placeholder="e.g. 25.5" id="milkQty" oninput="calcMilkValue()">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">🫙 Fat %</label>
+                <input type="number" step="0.1" class="form-control" placeholder="3.5" id="fatPct">
+              </div>
+              <div class="form-group">
+                <label class="form-label">🔬 SNF %</label>
+                <input type="number" step="0.1" class="form-control" placeholder="8.5">
+              </div>
+            </div>
+            <div id="milkCalc" style="display:none;padding:16px;background:rgba(212,160,23,0.08);border-radius:10px;margin-bottom:18px">
+              <div style="display:flex;justify-content:space-between">
+                <span style="font-size:14px;color:var(--brown)">Estimated Value:</span>
+                <span style="font-family:'Space Mono',monospace;font-size:18px;color:var(--gold);font-weight:700" id="milkValue">₹0</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📝 Notes (optional)</label>
+              <textarea class="form-control" rows="3" placeholder="Any remarks about this collection..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitMilk()" style="width:100%;justify-content:center;padding:14px">
+              <i class="fas fa-plus-circle"></i> Submit Collection
+            </button>
+          </div>
+        </div>
+
+        <!-- Payment Status -->
+        <div class="panel" id="panel-farmer-payments">
+          <div class="payment-card">
+            <div class="payment-label">Total Earnings This Month</div>
+            <div class="payment-amount">₹8,640</div>
+            <div style="display:flex;gap:24px;margin-top:12px">
+              <div><div style="font-size:12px;color:rgba(255,248,238,0.5)">Paid</div><div style="font-size:18px;font-family:'Space Mono',monospace;color:var(--cream)">₹7,920</div></div>
+              <div><div style="font-size:12px;color:rgba(255,248,238,0.5)">Pending</div><div style="font-size:18px;font-family:'Space Mono',monospace;color:var(--gold-light)">₹720</div></div>
+            </div>
+            <div class="payment-status-badge"><i class="fas fa-circle" style="font-size:8px"></i> Bank Transfer Active</div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">💳 Payment History</div>
+              <select class="form-control" style="width:140px;padding:8px 12px;font-size:13px"><option>March 2025</option><option>February 2025</option><option>January 2025</option></select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Amount</th><th>Liters</th><th>Status</th><th>Method</th></tr></thead>
+                <tbody id="paymentTable">
+                  <tr><td>Mar 15, 2025</td><td><b>₹2,400</b></td><td>80 L</td><td><span class="badge badge-success"><i class="fas fa-check"></i> Paid</span></td><td>Bank Transfer</td></tr>
+                  <tr><td>Mar 10, 2025</td><td><b>₹1,800</b></td><td>60 L</td><td><span class="badge badge-success"><i class="fas fa-check"></i> Paid</span></td><td>Bank Transfer</td></tr>
+                  <tr><td>Mar 05, 2025</td><td><b>₹3,720</b></td><td>124 L</td><td><span class="badge badge-success"><i class="fas fa-check"></i> Paid</span></td><td>UPI</td></tr>
+                  <tr><td>Mar 18, 2025</td><td><b>₹720</b></td><td>24 L</td><td><span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span></td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farmer History -->
+        <div class="panel" id="panel-farmer-history">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📜 Collection History</div>
+              <div style="display:flex;gap:10px">
+                <input type="date" class="form-control" style="width:160px;padding:8px 12px">
+                <button class="btn btn-primary btn-sm" onclick="refreshHistory()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn btn-danger btn-sm" onclick="clearHistory()"><i class="fas fa-trash"></i> Delete Old</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Session</th><th>Type</th><th>Liters</th><th>Fat%</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody id="historyTableBody">
+                  <tr><td>Mar 17</td><td>Morning</td><td>Cow</td><td>28 L</td><td>3.8%</td><td>₹840</td><td><span class="badge badge-success">Accepted</span></td></tr>
+                  <tr><td>Mar 17</td><td>Evening</td><td>Buffalo</td><td>22 L</td><td>6.2%</td><td>₹880</td><td><span class="badge badge-success">Accepted</span></td></tr>
+                  <tr><td>Mar 16</td><td>Morning</td><td>Cow</td><td>30 L</td><td>3.5%</td><td>₹900</td><td><span class="badge badge-success">Accepted</span></td></tr>
+                  <tr><td>Mar 16</td><td>Evening</td><td>Cow</td><td>18 L</td><td>3.2%</td><td>₹540</td><td><span class="badge badge-warning">Reviewing</span></td></tr>
+                  <tr><td>Mar 15</td><td>Morning</td><td>Mixed</td><td>35 L</td><td>4.0%</td><td>₹1,050</td><td><span class="badge badge-success">Accepted</span></td></tr>
+                  <tr><td>Mar 15</td><td>Evening</td><td>Buffalo</td><td>20 L</td><td>6.5%</td><td>₹800</td><td><span class="badge badge-danger">Rejected</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============= ADMIN PANELS ============= -->
+
+        <!-- Admin Dashboard -->
+        <div class="panel" id="panel-admin-dashboard">
+          <div class="stats-grid">
+            <div class="stat-card gold">
+              <div class="stat-icon gold"><i class="fas fa-users"></i></div>
+              <div class="stat-value">48</div>
+              <div class="stat-label">Active Farmers</div>
+              <div class="stat-change up">↑ +3 this week</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon green"><i class="fas fa-tint"></i></div>
+              <div class="stat-value">1,840 L</div>
+              <div class="stat-label">Today's Total Collection</div>
+              <div class="stat-change up">↑ +5% vs yesterday</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon blue"><i class="fas fa-shopping-cart"></i></div>
+              <div class="stat-value">127</div>
+              <div class="stat-label">Pending Orders</div>
+              <div class="stat-change down">↓ 12 urgent</div>
+            </div>
+            <div class="stat-card red">
+              <div class="stat-icon red"><i class="fas fa-rupee-sign"></i></div>
+              <div class="stat-value">₹2.4L</div>
+              <div class="stat-label">Monthly Revenue</div>
+              <div class="stat-change up">↑ +18% this month</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:20px;margin-bottom:20px">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">📊 Collection Overview</div>
+                <span class="badge badge-success">Live</span>
+              </div>
+              <div class="chart-bars" id="adminChart"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">⏳ Pending Tasks</div></div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(212,160,23,0.08);border-radius:8px">
+                  <span style="font-size:14px">👨‍🌾 Farmer Approvals</span>
+                  <span class="badge badge-warning">5 pending</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(192,57,43,0.06);border-radius:8px">
+                  <span style="font-size:14px">💳 Payments Due</span>
+                  <span class="badge badge-danger">₹18,200</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(26,74,122,0.06);border-radius:8px">
+                  <span style="font-size:14px">🛒 New Orders</span>
+                  <span class="badge badge-info">23 new</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:rgba(45,106,79,0.06);border-radius:8px">
+                  <span style="font-size:14px">🚴 Active Deliveries</span>
+                  <span class="badge badge-success">8 routes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approve Farmers -->
+        <div class="panel" id="panel-admin-farmers">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">👨‍🌾 Farmer Management</div>
+              <div style="display:flex;gap:10px">
+                <input class="form-control" style="width:200px;padding:8px 12px" placeholder="🔍 Search farmers...">
+                <button class="btn btn-primary btn-sm" onclick="openModal('addFarmerModal')"><i class="fas fa-plus"></i> Add Farmer</button>
+              </div>
+            </div>
+            <div class="toggle-group">
+              <div class="toggle-btn active" onclick="filterFarmers('all',this)">All (48)</div>
+              <div class="toggle-btn" onclick="filterFarmers('pending',this)">Pending (5)</div>
+              <div class="toggle-btn" onclick="filterFarmers('approved',this)">Approved (40)</div>
+              <div class="toggle-btn" onclick="filterFarmers('rejected',this)">Rejected (3)</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Farmer ID</th><th>Name</th><th>Village</th><th>Cows</th><th>Avg Liters/Day</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">FM-001</span></td><td><b>Ravi Patel</b></td><td>Anand</td><td>8</td><td>45 L</td><td><span class="badge badge-success">Approved</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">FM-002</span></td><td><b>Meena Shah</b></td><td>Nadiad</td><td>5</td><td>28 L</td><td><span class="badge badge-warning">Pending</span></td><td><div style="display:flex;gap:6px"><button class="btn btn-success btn-sm" onclick="showToast('Farmer Approved!','success')"><i class="fas fa-check"></i></button><button class="btn btn-danger btn-sm" onclick="showToast('Farmer Rejected','error')"><i class="fas fa-times"></i></button></div></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">FM-003</span></td><td><b>Suresh Kumar</b></td><td>Kheda</td><td>12</td><td>68 L</td><td><span class="badge badge-success">Approved</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">FM-004</span></td><td><b>Priya Desai</b></td><td>Petlad</td><td>3</td><td>15 L</td><td><span class="badge badge-warning">Pending</span></td><td><div style="display:flex;gap:6px"><button class="btn btn-success btn-sm" onclick="showToast('Farmer Approved!','success')"><i class="fas fa-check"></i></button><button class="btn btn-danger btn-sm" onclick="showToast('Farmer Rejected','error')"><i class="fas fa-times"></i></button></div></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">FM-005</span></td><td><b>Bharat Mehta</b></td><td>Borsad</td><td>20</td><td>110 L</td><td><span class="badge badge-success">Approved</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Record Collection (Admin) -->
+        <div class="panel" id="panel-admin-collection">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">📝 Record Collection</div></div>
+              <div class="form-group">
+                <label class="form-label">👨‍🌾 Select Farmer</label>
+                <select class="form-control">
+                  <option>FM-001 — Ravi Patel</option>
+                  <option>FM-003 — Suresh Kumar</option>
+                  <option>FM-005 — Bharat Mehta</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">📅 Date</label><input type="date" class="form-control"></div>
+                <div class="form-group"><label class="form-label">🕐 Session</label><select class="form-control"><option>Morning</option><option>Evening</option></select></div>
+              </div>
+              <div class="form-group"><label class="form-label">💧 Quantity (L)</label><input type="number" class="form-control" placeholder="Enter liters"></div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Fat %</label><input type="number" step="0.1" class="form-control" placeholder="3.5"></div>
+                <div class="form-group"><label class="form-label">SNF %</label><input type="number" step="0.1" class="form-control" placeholder="8.5"></div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="showToast('Collection recorded successfully!','success')"><i class="fas fa-save"></i> Record Collection</button>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">🏷️ Set Milk Price</div></div>
+              <div style="padding:20px;background:rgba(212,160,23,0.08);border-radius:12px;margin-bottom:20px;text-align:center">
+                <div style="font-size:13px;color:var(--gray)">Current Price</div>
+                <div id="currentPriceDisplay" style="font-family:'Space Mono',monospace;font-size:48px;color:var(--gold);font-weight:700">₹30</div>
+                <div style="font-size:13px;color:var(--gray)">per liter</div>
+              </div>
+              <div class="form-group"><label class="form-label">Set Price (₹/L)</label><input id="adminMilkPrice" type="number" class="form-control" value="30" min="1"></div>
+              <div class="form-group"><label class="form-label">📅 Effective From</label><input type="date" class="form-control"></div>
+              <button class="btn btn-success" style="width:100%;justify-content:center" onclick="updateAdminPrice()"><i class="fas fa-tag"></i> Update Price</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manage Orders (Admin) -->
+        <div class="panel" id="panel-admin-orders">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📦 Order Management</div>
+              <div style="display:flex;gap:10px">
+                <select class="form-control" style="width:160px;padding:8px 12px;font-size:13px"><option>All Status</option><option>Pending</option><option>Processing</option><option>Delivered</option></select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2041</span></td><td>Amit Shah</td><td>Cow Milk 5L</td><td>₹200</td><td>Sector 4, Anand</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-primary btn-sm" onclick="showToast('Order assigned to delivery!','success')">Assign</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2040</span></td><td>Priya Joshi</td><td>Buffalo Milk 2L</td><td>₹100</td><td>Gandhi Nagar, Nadiad</td><td><span class="badge badge-info">Out for Delivery</span></td><td><button class="btn btn-outline btn-sm">Track</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2039</span></td><td>Rahul Verma</td><td>Mix Pack 10L</td><td>₹380</td><td>Lal Bungalow, Anand</td><td><span class="badge badge-success">Delivered</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2038</span></td><td>Sunita Patel</td><td>Cow Milk 10L</td><td>₹400</td><td>Station Road, Kheda</td><td><span class="badge badge-warning">Pending</span></td><td><button class="btn btn-primary btn-sm" onclick="showToast('Order assigned to delivery!','success')">Assign</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="panel" id="panel-admin-reports">
+          <div class="stats-grid" style="margin-bottom:24px">
+            <div class="stat-card gold"><div class="stat-icon gold"><i class="fas fa-file-alt"></i></div><div class="stat-value">6</div><div class="stat-label">Reports Available</div></div>
+            <div class="stat-card green"><div class="stat-icon green"><i class="fas fa-chart-line"></i></div><div class="stat-value">March</div><div class="stat-label">Current Period</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+            <div class="card" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''" onclick="showToast('Generating report...','info')">
+              <div style="font-size:40px;margin-bottom:14px">📊</div>
+              <div style="font-weight:700;font-size:16px;margin-bottom:6px">Monthly Collection</div>
+              <div style="font-size:13px;color:var(--gray)">Farmer-wise milk collection summary</div>
+              <div style="margin-top:16px"><span class="badge badge-info">PDF + Excel</span></div>
+            </div>
+            <div class="card" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''" onclick="showToast('Generating report...','info')">
+              <div style="font-size:40px;margin-bottom:14px">💰</div>
+              <div style="font-weight:700;font-size:16px;margin-bottom:6px">Payment Report</div>
+              <div style="font-size:13px;color:var(--gray)">Paid & pending payment ledger</div>
+              <div style="margin-top:16px"><span class="badge badge-success">PDF + Excel</span></div>
+            </div>
+            <div class="card" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''" onclick="showToast('Generating report...','info')">
+              <div style="font-size:40px;margin-bottom:14px">🛒</div>
+              <div style="font-weight:700;font-size:16px;margin-bottom:6px">Sales Report</div>
+              <div style="font-size:13px;color:var(--gray)">Order & revenue breakdown</div>
+              <div style="margin-top:16px"><span class="badge badge-warning">PDF + Excel</span></div>
+            </div>
+            <div class="card" style="cursor:pointer;transition:all 0.2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform=''" onclick="showToast('Generating report...','info')">
+              <div style="font-size:40px;margin-bottom:14px">🚚</div>
+              <div style="font-weight:700;font-size:16px;margin-bottom:6px">Delivery Report</div>
+              <div style="font-size:13px;color:var(--gray)">Route & delivery performance</div>
+              <div style="margin-top:16px"><span class="badge badge-info">PDF only</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============= CUSTOMER PANELS ============= -->
+
+        <!-- Customer Dashboard -->
+        <div class="panel" id="panel-customer-dashboard">
+          <div class="quick-actions">
+            <div class="quick-action" onclick="showPanel('customer','order')">
+              <div class="quick-action-icon">🥛</div>
+              <div class="quick-action-label">Order Milk</div>
+            </div>
+            <div class="quick-action" onclick="showPanel('customer','track')">
+              <div class="quick-action-icon">🚴</div>
+              <div class="quick-action-label">Track Delivery</div>
+            </div>
+            <div class="quick-action" onclick="showPanel('customer','orders')">
+              <div class="quick-action-icon">📋</div>
+              <div class="quick-action-label">My Orders</div>
+            </div>
+            <div class="quick-action" onclick="showPanel('customer','subscription')">
+              <div class="quick-action-icon">🔔</div>
+              <div class="quick-action-label">Subscribe</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+            <div class="stat-card blue">
+              <div class="stat-icon blue"><i class="fas fa-shopping-bag"></i></div>
+              <div class="stat-value">12</div>
+              <div class="stat-label">Total Orders</div>
+              <div class="stat-change up">↑ 2 this week</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon green"><i class="fas fa-truck"></i></div>
+              <div class="stat-value">1</div>
+              <div class="stat-label">Active Delivery</div>
+              <div class="stat-change up">ETA: 15 mins</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🥛 Available Products</div>
+              <span class="badge badge-success"><i class="fas fa-circle" style="font-size:8px"></i> Fresh Stock</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+              <div style="border:1.5px solid rgba(107,61,46,0.1);border-radius:12px;padding:18px;transition:all 0.2s;cursor:pointer" onmouseenter="this.style.borderColor='var(--gold)'" onmouseleave="this.style.borderColor='rgba(107,61,46,0.1)'">
+                <div style="font-size:36px;margin-bottom:10px">🐄</div>
+                <div style="font-weight:700;font-size:16px">Cow Milk</div>
+                <div style="font-size:13px;color:var(--gray);margin:4px 0 12px">Fresh • Low Fat • Grade A</div>
+                <div style="font-family:'Space Mono',monospace;font-size:20px;color:var(--gold);margin-bottom:12px">₹30/L</div>
+                <button class="btn btn-primary btn-sm" onclick="showPanel('customer','order');showToast('Cow milk selected!','info')" style="width:100%;justify-content:center">Order Now</button>
+              </div>
+              <div style="border:1.5px solid rgba(107,61,46,0.1);border-radius:12px;padding:18px;transition:all 0.2s;cursor:pointer" onmouseenter="this.style.borderColor='var(--gold)'" onmouseleave="this.style.borderColor='rgba(107,61,46,0.1)'">
+                <div style="font-size:36px;margin-bottom:10px">🐃</div>
+                <div style="font-weight:700;font-size:16px">Buffalo Milk</div>
+                <div style="font-size:13px;color:var(--gray);margin:4px 0 12px">Rich • High Fat • Creamy</div>
+                <div style="font-family:'Space Mono',monospace;font-size:20px;color:var(--gold);margin-bottom:12px">₹40/L</div>
+                <button class="btn btn-primary btn-sm" onclick="showPanel('customer','order');showToast('Buffalo milk selected!','info')" style="width:100%;justify-content:center">Order Now</button>
+              </div>
+              <div style="border:1.5px solid rgba(107,61,46,0.1);border-radius:12px;padding:18px;transition:all 0.2s;cursor:pointer" onmouseenter="this.style.borderColor='var(--gold)'" onmouseleave="this.style.borderColor='rgba(107,61,46,0.1)'">
+                <div style="font-size:36px;margin-bottom:10px">🧴</div>
+                <div style="font-weight:700;font-size:16px">Mix Pack</div>
+                <div style="font-size:13px;color:var(--gray);margin:4px 0 12px">50% Cow + 50% Buffalo</div>
+                <div style="font-family:'Space Mono',monospace;font-size:20px;color:var(--gold);margin-bottom:12px">₹35/L</div>
+                <button class="btn btn-primary btn-sm" onclick="showPanel('customer','order');showToast('Mix pack selected!','info')" style="width:100%;justify-content:center">Order Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Place Order -->
+        <div class="panel" id="panel-customer-order">
+          <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;align-items:start">
+            <div class="card">
+              <div class="card-header"><div class="card-title">🛒 Place Order</div></div>
+              <div class="form-group">
+                <label class="form-label">🥛 Milk Type</label>
+                <select class="form-control" id="orderMilkType" onchange="updateOrderTotal()">
+                  <option value="30">🐄 Cow Milk — ₹30/L</option>
+                  <option value="40">🐃 Buffalo Milk — ₹40/L</option>
+                  <option value="35">🧴 Mix Pack — ₹35/L</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">💧 Quantity (Liters)</label>
+                <input type="number" class="form-control" placeholder="e.g. 5" id="orderQty" oninput="updateOrderTotal()" min="1" max="50">
+              </div>
+              <div class="form-group">
+                <label class="form-label">📅 Delivery Date</label>
+                <input type="date" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">🕐 Preferred Time</label>
+                <select class="form-control">
+                  <option>Morning (6 AM – 9 AM)</option>
+                  <option>Afternoon (12 PM – 3 PM)</option>
+                  <option>Evening (5 PM – 8 PM)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">📍 Delivery Address</label>
+                <textarea class="form-control" rows="3" placeholder="Enter full delivery address..."></textarea>
+              </div>
+              <div id="orderSummaryBox" style="display:none;padding:16px;background:rgba(212,160,23,0.08);border-radius:10px;margin-bottom:18px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gray)">Subtotal</span><span id="subtotal" style="font-weight:600">₹0</span></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:var(--gray)">Delivery</span><span style="font-weight:600;color:var(--green)">FREE</span></div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(107,61,46,0.1);padding-top:8px"><span style="font-weight:700">Total</span><span id="orderTotal" style="font-family:'Space Mono',monospace;font-size:20px;color:var(--gold);font-weight:700">₹0</span></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">💳 Payment Method</label>
+                <select class="form-control">
+                  <option>UPI (GPay, PhonePe)</option>
+                  <option>Cash on Delivery</option>
+                  <option>Net Banking</option>
+                  <option>Card</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px" onclick="placeOrder()">
+                <i class="fas fa-shopping-cart"></i> Place Order
+              </button>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:20px">
+                <div class="card-title" style="margin-bottom:14px">ℹ️ Order Info</div>
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+                  <div style="display:flex;gap:10px"><span>🕐</span><span>Same-day delivery for orders before 8 AM</span></div>
+                  <div style="display:flex;gap:10px"><span>🆓</span><span>Free delivery on all orders</span></div>
+                  <div style="display:flex;gap:10px"><span>✅</span><span>Quality tested & certified milk</span></div>
+                  <div style="display:flex;gap:10px"><span>🔄</span><span>Easy cancellation before dispatch</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-title" style="margin-bottom:14px">🔔 Subscribe</div>
+                <p style="font-size:13px;color:var(--gray);margin-bottom:14px">Get daily milk delivery at your door. Save 5%!</p>
+                <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="showToast('Subscription plan opened!','info')"><i class="fas fa-bell"></i> Start Subscription</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Track Delivery (Map) -->
+        <div class="panel" id="panel-customer-track">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🗺️ Live Delivery Tracking</div>
+                <div class="card-subtitle">Order #ORD-2041 • Estimated: 15 mins</div>
+              </div>
+              <span class="badge badge-info" style="animation:pulse 1.5s ease infinite"><i class="fas fa-circle" style="font-size:8px"></i> Live</span>
+            </div>
+
+            <!-- Track Steps -->
+            <div class="track-steps">
+              <div class="track-step done">
+                <div class="track-circle"><i class="fas fa-check"></i></div>
+                <div class="track-label">Ordered</div>
+              </div>
+              <div class="track-step done">
+                <div class="track-circle"><i class="fas fa-check"></i></div>
+                <div class="track-label">Packed</div>
+              </div>
+              <div class="track-step active">
+                <div class="track-circle"><i class="fas fa-bicycle"></i></div>
+                <div class="track-label">On the Way</div>
+              </div>
+              <div class="track-step">
+                <div class="track-circle"><i class="fas fa-home"></i></div>
+                <div class="track-label">Delivered</div>
+              </div>
+            </div>
+
+            <!-- MAP -->
+            <div class="map-container">
+              <div class="map-bg"></div>
+
+              <!-- Roads -->
+              <div class="map-road road-h" style="top:50%"></div>
+              <div class="map-road road-h" style="top:30%"></div>
+              <div class="map-road road-h" style="top:70%"></div>
+              <div class="map-road road-v" style="left:30%"></div>
+              <div class="map-road road-v" style="left:60%"></div>
+              <div class="map-road road-v" style="left:80%"></div>
+
+              <!-- Farm -->
+              <div class="map-location" style="left:14%;top:42%">
+                <div class="map-pin pin-farm"><i class="fas fa-home"></i></div>
+                <div class="map-label">🏚️ Dairy Farm</div>
+              </div>
+
+              <!-- Customer -->
+              <div class="map-location" style="left:72%;top:52%">
+                <div class="map-pin pin-customer"><i class="fas fa-user"></i></div>
+                <div class="map-label">🏠 Your Location</div>
+              </div>
+
+              <!-- Mid Stop -->
+              <div class="map-location" style="left:44%;top:28%">
+                <div class="map-pin pin-delivery" style="background:var(--green-light)"><i class="fas fa-warehouse"></i></div>
+                <div class="map-label">🏭 Collection Center</div>
+              </div>
+
+              <!-- Delivery Boy (animated) -->
+              <div class="delivery-boy">🚴</div>
+
+              <!-- Legend -->
+              <div class="map-legend">
+                <div style="font-weight:700;font-size:11px;margin-bottom:6px;color:var(--brown-dark)">MAP LEGEND</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div><span>Dairy Farm</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div><span>Delivery Boy</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div><span>Your Location</span></div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:20px">
+              <div style="text-align:center;padding:14px;background:rgba(26,74,122,0.06);border-radius:10px">
+                <div style="font-size:22px;margin-bottom:4px">🚴</div>
+                <div style="font-weight:700;font-size:15px">Arjun Singh</div>
+                <div style="font-size:12px;color:var(--gray)">Delivery Partner</div>
+              </div>
+              <div style="text-align:center;padding:14px;background:rgba(212,160,23,0.06);border-radius:10px">
+                <div style="font-size:22px;margin-bottom:4px">📍</div>
+                <div style="font-weight:700;font-size:15px">1.8 km</div>
+                <div style="font-size:12px;color:var(--gray)">Distance Away</div>
+              </div>
+              <div style="text-align:center;padding:14px;background:rgba(45,106,79,0.06);border-radius:10px">
+                <div style="font-size:22px;margin-bottom:4px">⏱️</div>
+                <div style="font-weight:700;font-size:15px">~15 min</div>
+                <div style="font-size:12px;color:var(--gray)">ETA</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:12px">
+              <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="showToast('Calling Arjun Singh...','info')"><i class="fas fa-phone"></i> Call Driver</button>
+              <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="showToast('Message sent!','success')"><i class="fas fa-comment"></i> Send Message</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Orders -->
+        <div class="panel" id="panel-customer-orders">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 My Orders</div>
+              <button class="btn btn-primary btn-sm" onclick="showPanel('customer','order')"><i class="fas fa-plus"></i> New Order</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Order ID</th><th>Date</th><th>Product</th><th>Qty</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2041</span></td><td>Mar 17</td><td>Cow Milk</td><td>5 L</td><td>₹200</td><td><span class="badge badge-info">Out for Delivery</span></td><td><button class="btn btn-blue btn-sm" onclick="showPanel('customer','track')"><i class="fas fa-map-marker-alt"></i> Track</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2039</span></td><td>Mar 16</td><td>Buffalo Milk</td><td>2 L</td><td>₹100</td><td><span class="badge badge-success">Delivered</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('Invoice downloaded!','success')">Invoice</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2035</span></td><td>Mar 14</td><td>Mix Pack</td><td>10 L</td><td>₹380</td><td><span class="badge badge-success">Delivered</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('Invoice downloaded!','success')">Invoice</button></td></tr>
+                  <tr><td><span style="font-family:'Space Mono';font-size:12px">#ORD-2028</span></td><td>Mar 10</td><td>Cow Milk</td><td>8 L</td><td>₹320</td><td><span class="badge badge-success">Delivered</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('Invoice downloaded!','success')">Invoice</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subscription Panel -->
+        <div class="panel" id="panel-customer-subscription">
+          <div class="card" style="text-align:center;padding:48px;background:linear-gradient(135deg, var(--brown-dark), var(--brown));color:var(--cream)">
+            <div style="font-size:64px;margin-bottom:16px">🔔</div>
+            <div style="font-family:'Playfair Display',serif;font-size:32px;margin-bottom:8px">Daily Milk Subscription</div>
+            <div style="color:rgba(255,248,238,0.65);margin-bottom:32px">Get fresh milk at your doorstep every day. Cancel anytime.</div>
+            <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+              <div style="background:rgba(255,248,238,0.1);border:1.5px solid rgba(212,160,23,0.4);border-radius:16px;padding:24px 32px;min-width:180px;cursor:pointer;transition:all 0.2s" onmouseenter="this.style.background='rgba(212,160,23,0.2)'" onmouseleave="this.style.background='rgba(255,248,238,0.1)'" onclick="showToast('Weekly plan activated!','success')">
+                <div style="font-size:28px;margin-bottom:8px">📅</div>
+                <div style="font-size:18px;font-weight:700;margin-bottom:4px">Weekly</div>
+                <div style="font-size:28px;font-family:'Space Mono',monospace;color:var(--gold-light)">5%</div>
+                <div style="font-size:12px;color:rgba(255,248,238,0.5)">savings</div>
+              </div>
+              <div style="background:rgba(212,160,23,0.25);border:2px solid var(--gold-light);border-radius:16px;padding:24px 32px;min-width:180px;cursor:pointer;position:relative" onclick="showToast('Monthly plan activated!','success')">
+                <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold-light);color:var(--brown-dark);padding:2px 12px;border-radius:20px;font-size:11px;font-weight:700">BEST VALUE</div>
+                <div style="font-size:28px;margin-bottom:8px">🗓️</div>
+                <div style="font-size:18px;font-weight:700;margin-bottom:4px">Monthly</div>
+                <div style="font-size:28px;font-family:'Space Mono',monospace;color:var(--gold-light)">10%</div>
+                <div style="font-size:12px;color:rgba(255,248,238,0.5)">savings</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- ====== MODAL: Add Farmer ====== -->
+<div class="modal-overlay" id="addFarmerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">👨‍🌾 Add New Farmer</div>
+      <button class="modal-close" onclick="closeModal('addFarmerModal')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-control" placeholder="Ravi"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-control" placeholder="Patel"></div>
+    </div>
+    <div class="form-group"><label class="form-label">📧 Email</label><input type="email" class="form-control" placeholder="farmer@example.com"></div>
+    <div class="form-group"><label class="form-label">📱 Mobile</label><input class="form-control" placeholder="+91 98765 43210"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">🏘️ Village</label><input class="form-control" placeholder="Anand"></div>
+      <div class="form-group"><label class="form-label">🐄 No. of Animals</label><input type="number" class="form-control" placeholder="5"></div>
+    </div>
+    <div class="form-group"><label class="form-label">🏦 Bank Account No.</label><input class="form-control" placeholder="XXXX XXXX XXXX"></div>
+    <div class="form-group"><label class="form-label">🏛️ IFSC Code</label><input class="form-control" placeholder="SBIN0001234"></div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="closeModal('addFarmerModal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="closeModal('addFarmerModal');showToast('Farmer added & pending approval!','success')"><i class="fas fa-plus"></i> Add Farmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== TOAST CONTAINER ====== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ====== STATE ======
+let currentRole = '';
+let currentSection = '';
+
+const ROLES = {
+  farmer: {
+    emoji: '👨‍🌾',
+    badge: 'Farmer Portal',
+    name: 'Ravi Patel',
+    avatar: 'R',
+    roleText: 'Registered Farmer',
+    nav: [
+      { id: 'dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard', section: 'dashboard' },
+      { id: 'addmilk', icon: 'fas fa-plus-circle', label: 'Add Milk', section: 'addmilk' },
+      { id: 'payments', icon: 'fas fa-wallet', label: 'Payments', section: 'payments' },
+      { id: 'history', icon: 'fas fa-history', label: 'History', section: 'history' },
+    ]
+  },
+  admin: {
+    emoji: '🧑‍💼',
+    badge: 'Admin Panel',
+    name: 'Admin User',
+    avatar: 'A',
+    roleText: 'System Administrator',
+    nav: [
+      { id: 'dashboard', icon: 'fas fa-chart-pie', label: 'Dashboard', section: 'dashboard' },
+      { id: 'farmers', icon: 'fas fa-users', label: 'Farmers', section: 'farmers' },
+      { id: 'collection', icon: 'fas fa-tint', label: 'Collection & Price', section: 'collection' },
+      { id: 'orders', icon: 'fas fa-box', label: 'Orders', section: 'orders' },
+      { id: 'reports', icon: 'fas fa-chart-bar', label: 'Reports', section: 'reports' },
+    ]
+  },
+  customer: {
+    emoji: '🛒',
+    badge: 'Customer Portal',
+    name: 'Amit Shah',
+    avatar: 'A',
+    roleText: 'Valued Customer',
+    nav: [
+      { id: 'dashboard', icon: 'fas fa-home', label: 'Home', section: 'dashboard' },
+      { id: 'order', icon: 'fas fa-shopping-cart', label: 'Order Milk', section: 'order' },
+      { id: 'track', icon: 'fas fa-map-marker-alt', label: 'Track Delivery', section: 'track' },
+      { id: 'orders', icon: 'fas fa-list', label: 'My Orders', section: 'orders' },
+      { id: 'subscription', icon: 'fas fa-bell', label: 'Subscribe', section: 'subscription' },
+    ]
+  }
+};
+
+// ====== ROLE ENTRY ======
+function enterRole(role) {
+  currentRole = role;
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'block';
+  document.getElementById('authEmoji').textContent = ROLES[role].emoji;
+}
+
+function showSplash() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('splash').style.display = 'flex';
+}
+
+// ====== AUTH ======
+function switchAuth(mode) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = mode === 'register' ? 'block' : 'none';
+}
+
+function doLogin() {
+  showToast('Login successful! Welcome back 👋', 'success');
+  setTimeout(() => launchApp(), 600);
+}
+
+function doRegister() {
+  showToast('Account created! Pending admin approval.', 'success');
+  setTimeout(() => launchApp(), 600);
+}
+
+function launchApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  setupSidebar();
+  showPanel(currentRole, 'dashboard');
+  updateDate();
+  drawCharts();
+  loadCurrentPrice();
+  if (currentRole === 'farmer') {
+    refreshHistory();
+  }
+}
+
+async function loadCurrentPrice() {
+  try {
+    const resp = await fetch('/api/settings/price');
+    const data = await resp.json();
+    if (!data.success) return;
+    const price = data.price;
+    const display = document.getElementById('currentPriceDisplay');
+    const input = document.getElementById('adminMilkPrice');
+    if (display) display.textContent = `₹${price}`;
+    if (input) input.value = price;
+  } catch (err) {
+    console.error('Unable to load current price', err);
+  }
+}
+
+async function updateAdminPrice() {
+  const input = document.getElementById('adminMilkPrice');
+  if (!input) return;
+  const price = parseFloat(input.value);
+  if (!price || price <= 0) {
+    showToast('Please enter a valid price', 'error');
+    return;
+  }
+
+  try {
+    const resp = await fetch('/api/settings/price', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ price })
+    });
+    const text = await resp.text();
+    try {
+      const data = JSON.parse(text);
+      if (!data.success) {
+        showToast(data.message || 'Could not update price', 'error');
+        console.error('price update failed', resp.status, data);
+        return;
+      }
+      document.getElementById('currentPriceDisplay').textContent = `₹${price}`;
+      showToast('Milk price updated & saved successfully', 'success');
+    } catch (parseErr) {
+      showToast('Unable to update price: invalid server response', 'error');
+      console.error('price update parse error', resp.status, text);
+    }
+  } catch (err) {
+    showToast('Unable to update price', 'error');
+    console.error('price update request failed', err);
+  }
+}
+
+// ====== SIDEBAR ======
+function setupSidebar() {
+  const role = ROLES[currentRole];
+  document.getElementById('roleBadge').textContent = role.badge;
+  document.getElementById('userName').textContent = role.name;
+  document.getElementById('avatarText').textContent = role.avatar;
+  document.getElementById('userRoleText').textContent = role.roleText;
+
+  const nav = document.getElementById('sidebarNav');
+  nav.innerHTML = `<div class="nav-section-label">Main Menu</div>`;
+  role.nav.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'nav-item';
+    el.id = `nav-${item.section}`;
+    el.innerHTML = `<i class="${item.icon}"></i> ${item.label}`;
+    el.onclick = () => showPanel(currentRole, item.section);
+    nav.appendChild(el);
+  });
+}
+
+function showPanel(role, section) {
+  currentSection = section;
+
+  // Update title
+  const titles = {
+    dashboard: '📊 Dashboard',
+    addmilk: '🥛 Add Milk Collection',
+    payments: '💳 Payment Status',
+    history: '📜 Collection History',
+    farmers: '👨‍🌾 Manage Farmers',
+    collection: '📝 Record & Price',
+    orders: '📦 Orders',
+    reports: '📊 Reports',
+    order: '🛒 Place Order',
+    track: '🗺️ Track Delivery',
+    subscription: '🔔 Subscription',
+  };
+  document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
+
+  // Hide all panels
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+  // Show target
+  const target = document.getElementById(`panel-${role}-${section}`);
+  if (target) target.classList.add('active');
+
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const activeNav = document.getElementById(`nav-${section}`);
+  if (activeNav) activeNav.classList.add('active');
+
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+
+  // Set today date default
+  const dateInputs = document.querySelectorAll('input[type="date"]');
+  const today = new Date().toISOString().split('T')[0];
+  dateInputs.forEach(d => { if (!d.value) d.value = today; });
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('splash').style.display = 'flex';
+  showToast('Logged out successfully', 'info');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ====== CHARTS ======
+function drawCharts() {
+  drawBar('farmerChart', [38, 42, 35, 50, 28, 45, 40], '#D4A017');
+  drawBar('adminChart', [480, 520, 490, 610, 450, 580, 540], '#2D6A4F');
+}
+
+function drawBar(id, values, color) {
+  const container = document.getElementById(id);
+  if (!container) return;
+  const max = Math.max(...values);
+  container.innerHTML = values.map((v, i) => `
+    <div class="chart-bar-wrap">
+      <div class="chart-val">${v}</div>
+      <div class="chart-bar-inner" style="height:${(v/max)*100}px;background:linear-gradient(to top,${color},${color}88)"></div>
+    </div>
+  `).join('');
+}
+
+// ====== MILK CALC ======
+function calcMilkValue() {
+  const qty = parseFloat(document.getElementById('milkQty').value) || 0;
+  const val = qty * 30;
+  const box = document.getElementById('milkCalc');
+  if (qty > 0) {
+    box.style.display = 'block';
+    document.getElementById('milkValue').textContent = `₹${val.toFixed(0)}`;
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+const CURRENT_USER_ID = 1;
+
+async function submitMilk() {
+  const date = document.getElementById('milkDate').value;
+  const session = document.getElementById('milkSession').value;
+  const type = document.getElementById('milkType').value;
+  const qty = parseFloat(document.getElementById('milkQty').value);
+  const fat = parseFloat(document.getElementById('fatPct').value) || 0;
+
+  if (!date || !qty || qty <= 0) {
+    showToast('Please fill date and quantity for milk submission', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/collection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ liters: qty, milkType: type })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Could not save milk record', 'error');
+      return;
+    }
+
+    showToast(`✅ ${qty}L recorded successfully!`, 'success');
+    refreshHistory();
+
+    const milkCalc = document.getElementById('milkCalc');
+    if (milkCalc) milkCalc.style.display = 'none';
+    document.getElementById('milkQty').value = '';
+    document.getElementById('fatPct').value = '';
+  } catch (err) {
+    showToast('Network error. Try again.', 'error');
+  }
+}
+
+async function refreshHistory() {
+  const body = document.getElementById('historyTableBody');
+  if (!body) return;
+
+  try {
+    const resp = await fetch(`/api/history/${CURRENT_USER_ID}`);
+    const data = await resp.json();
+    if (!data.success) {
+      showToast('Could not load history', 'error');
+      return;
+    }
+
+    const history = data.history || [];
+    if (!history.length) {
+      body.innerHTML = '<tr><td colspan="7" style="color:#666;text-align:center">No collection history yet.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = history.map(item => {
+      const d = new Date(item.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      const status = item.type === 'collection' ? '<span class="badge badge-success">Accepted</span>' : '<span class="badge badge-info">Info</span>';
+      const qtyMatch = item.message.match(/(\d+\.?\d*)L/);
+      const qtyText = qtyMatch ? `${qtyMatch[1]} L` : '—';
+      const milkTypeMatch = item.message.match(/of\s+([A-Za-z]+)/);
+      const milkType = milkTypeMatch ? milkTypeMatch[1] : 'N/A';
+      return `<tr><td>${d}</td><td>${item.session || 'N/A'}</td><td>${milkType}</td><td>${qtyText}</td><td>—</td><td>—</td><td>${status}</td></tr>`;
+    }).join('');
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="7" style="color:#666;text-align:center">History load failed.</td></tr>';
+    showToast('Failed to fetch history', 'error');
+  }
+}
+
+async function clearHistory() {
+  try {
+    const res = await fetch('/api/collections/delete', { method: 'POST' });
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.message || 'Failed to delete history', 'error');
+      return;
+    }
+    showToast('Old history cleared successfully', 'success');
+    const body = document.getElementById('historyTableBody');
+    if (body) {
+      body.innerHTML = '<tr><td colspan="7" style="color:#666;text-align:center">No collection history yet.</td></tr>';
+    }
+  } catch (err) {
+    showToast('Could not clear old history', 'error');
+  }
+}
+
+// ====== ORDER CALC ======
+function updateOrderTotal() {
+  const price = parseFloat(document.getElementById('orderMilkType').value) || 0;
+  const qty = parseFloat(document.getElementById('orderQty').value) || 0;
+  const total = price * qty;
+  const box = document.getElementById('orderSummaryBox');
+  if (qty > 0) {
+    box.style.display = 'block';
+    document.getElementById('subtotal').textContent = `₹${total}`;
+    document.getElementById('orderTotal').textContent = `₹${total}`;
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function placeOrder() {
+  const qty = document.getElementById('orderQty').value;
+  if (!qty) { showToast('Please enter quantity!', 'error'); return; }
+  showToast('🎉 Order placed! Tracking started.', 'success');
+  setTimeout(() => showPanel('customer', 'track'), 1000);
+}
+
+// ====== MODAL ======
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ====== TOAST ======
+function showToast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+// ====== DATE ======
+function updateDate() {
+  const el = document.getElementById('dateDisplay');
+  if (el) {
+    const now = new Date();
+    el.textContent = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+}
+
+// ====== FILTER FARMERS ======
+function filterFarmers(type, el) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  showToast(`Showing ${type} farmers`, 'info');
+}
+
+// ====== KEYBOARD SHORTCUT ======
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+    document.getElementById('sidebar').classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
